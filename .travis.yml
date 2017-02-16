@@ -16,7 +16,7 @@ addons:
   apt:
     packages:
       - xvfb
-      - wine
+      - wine1.6
       - mono-devel 
 before_script:
 - node --version
