@@ -25,6 +25,7 @@ before_script:
 - npm install -g electron
 - node --version
 - npm run package || true
+
 cache:
   directories:
   - node_modules
