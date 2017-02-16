@@ -15,13 +15,16 @@ before_install:
 addons:
   apt:
     packages:
-    - xvfb
+      - xvfb
+      - wine
+      - mono-devel 
 before_script:
 - node --version
 - npm install
 - npm install -g electron
 - node --version
 - npm run package || true
+- if [[ "$TRAVIS_OS_NAME" == "linux" ]]; the npm run package-win; fi
 cache:
   directories:
   - node_modules
