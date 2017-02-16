@@ -14,7 +14,7 @@ test_script:
   # Output useful info for debugging.
   - node --version
   - npm --version
-  - npm run e2e 
+  - npm run package
 
 # Don't actually build.
 build: off
