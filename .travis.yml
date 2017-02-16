@@ -17,7 +17,7 @@ before_install:
   - echo "Deploying to $RELEASE_FILE_PATH" 
 addons:
   apt:
-    packages:
+    packages: 
       - xvfb
 before_script:
 - node --version
