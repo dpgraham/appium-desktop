@@ -3,7 +3,7 @@ sudo: required
 node: 
 matrix:
   include:
-  - os: osx
+  # - os: osx # TODO: Re-enable once Travis OSX is good
   - os: linux
     env: CC=clang CXX=clang++ npm_config_clang=1
     compiler: clang
@@ -25,7 +25,6 @@ before_script:
 - npm install -g electron
 - node --version
 - npm run package || true
-- if [[ "$TRAVIS_OS_NAME" == "linux" ]]; the npm run package-win; fi
 cache:
   directories:
   - node_modules
