@@ -36,8 +36,6 @@ dist: trusty
 deployyyy:
   provider: releases
   skip_cleanup: true
-  api_key:
-    secure: k2z1kRLa4NTG7yKClQPUvihJH7Ev7xowAJ7G4eRer97Wr8wlktF3J5021EpCk89Hd37w8Wg55CtQg7pkylq5Qz1rMJb9JGFHxNOiP/I/8ai9Uw/yME57yhkCeabhs9iBcJW+9KNaoNZWsGVe+mL4LpF/zZHYCNLGekiRPS4Oa0iSSDyFsb2y0EYidOxWA9LUpI+f+yxJSSxEX6dxlGsFs2vkuDoBtCMgPtfSWyHvP/HdcwKKu2kr+kX8PR8MeZ4KjIFs+gYEEEIkFgd1grZJ9cA/2IfZXO82Gg96tVxeJ917j1OdSNLcnHjjvKcwbNLE1DB17BZ7zATEOWUD6uQc7lpn+W7Gj2djynaaFmI3goPg8Ko4gLduOIbxHlB0G4lGRw5ddWS8TOSvHWmFhp/MyD8L+ks+IGNKrDHXCFo82H/fTJ4Uk4tEXO5rIsdJsQIichxqrXvaBlGPNbzo9+bUZmYJe1G0WkIjdes/yqqr2rY04ISlXLStfMtONzqIpLaycQZ7QSDBl9w16/Ubd1J7Av1pcQce5xNZiHij4sQaeq5+LC4IGC81GkZiK8WUJ0FhJQm334W9ioIdN+yFhajLPqHNrkaFDbbMLBgYPxs4bkhx4VkWkztPFhHfiVDcvSjzBnvRIpkUQL2Q2K7HCJnfZv0sbbD+AjjKoSJGF682qwE=
   file:
     - "/release/linux-unpacked/appium-desktop"
   api_key:
