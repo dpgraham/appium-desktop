@@ -33,13 +33,15 @@ install:
 - export DISPLAY=':99.0'
 - Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
 dist: trusty
-deploy:
+deployyyy:
   provider: releases
   skip_cleanup: true
-  api_key: e5895ad1ddd5ef7d4b70aca01164cfeea88f3617
-  file:
-  - "/release/linux-unpacked/appium-desktop"
-  on:
-    tags: true
   api_key:
     secure: k2z1kRLa4NTG7yKClQPUvihJH7Ev7xowAJ7G4eRer97Wr8wlktF3J5021EpCk89Hd37w8Wg55CtQg7pkylq5Qz1rMJb9JGFHxNOiP/I/8ai9Uw/yME57yhkCeabhs9iBcJW+9KNaoNZWsGVe+mL4LpF/zZHYCNLGekiRPS4Oa0iSSDyFsb2y0EYidOxWA9LUpI+f+yxJSSxEX6dxlGsFs2vkuDoBtCMgPtfSWyHvP/HdcwKKu2kr+kX8PR8MeZ4KjIFs+gYEEEIkFgd1grZJ9cA/2IfZXO82Gg96tVxeJ917j1OdSNLcnHjjvKcwbNLE1DB17BZ7zATEOWUD6uQc7lpn+W7Gj2djynaaFmI3goPg8Ko4gLduOIbxHlB0G4lGRw5ddWS8TOSvHWmFhp/MyD8L+ks+IGNKrDHXCFo82H/fTJ4Uk4tEXO5rIsdJsQIichxqrXvaBlGPNbzo9+bUZmYJe1G0WkIjdes/yqqr2rY04ISlXLStfMtONzqIpLaycQZ7QSDBl9w16/Ubd1J7Av1pcQce5xNZiHij4sQaeq5+LC4IGC81GkZiK8WUJ0FhJQm334W9ioIdN+yFhajLPqHNrkaFDbbMLBgYPxs4bkhx4VkWkztPFhHfiVDcvSjzBnvRIpkUQL2Q2K7HCJnfZv0sbbD+AjjKoSJGF682qwE=
+  file:
+    - "/release/linux-unpacked/appium-desktop"
+  api_key:
+    secure: oEQR3OIKVftqOwPOagzN7/RPw4fJjK64gbg4ziq9TUcsMSKHxI5kpoWLJPnahyMtO7Vkj6ee7Xy3QJXPJ1fl0ZX7Mo8P3t+bl3bKMfQBv1ld6iBMgrNxnB0ABd9084n4pfYAbV7N5g5ZkX9oV4ExcJWPKD2eSp3AaiyguPit3JpGwlSOsJByg1vCmB9yDgfo5dih9gEuId+tF/1ylpATqA+3rijtRdNOmoTTNXxmN+o/Hu8GzqP8LmlucGUqOKIyhM46/6ypWVtTWpmu5KAx3qXkqTed/S4I+VZ1EC7EigXPX2MD09w2/d44udGWJGAHVSGDNUTH3Kex6QT/2VPJ72CKUm7RV/xrKudx+6MhprbYkcsi0HdcbpMz0c3L30ps6src3S1zBQHC69RZrL/5WgFdEm0uG/i//SaYVuAD1dO7+0lBxnPqQrft3sdj6qOkAP1w9cUbNeYTihojyzTlgbrL1XsGji3M2Ir0DF4AxRdFI2vnyEmrZDtJKynGYBlfMFFc9RGTrFGSq1hP03/E7Hhg+BOnMDrfkPM2TXlj/xdhxeRzC9qtUwVyulEQrsdHV0ALzwC4eXR/w0xygABqhTM8GxodPQmBK1W9sP9DZy0YiEzWwMPKsWYkSDyqXUcfkX+sp37d0lTuWpDjWzyZ3GYrT+6STVTnyU5NZ5FT6VE=
+  on:
+    repo: dpgraham/appium-desktop
+    tags: true
