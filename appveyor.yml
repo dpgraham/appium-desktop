@@ -9,7 +9,7 @@ test_script:
   - node --version
   - npm --version
   - npm run package
-  - npm run e2e
+  #- npm run e2e # TODO: How to make script windows compatible?
 
 build: off
 

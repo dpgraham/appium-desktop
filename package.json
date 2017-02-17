@@ -23,7 +23,7 @@
   "scripts": {
     "test": "cross-env NODE_ENV=test mocha --compilers js:babel-register --recursive --require ./test/setup.js test/**/*.spec.js",
     "test-watch": "npm test -- --watch",
-    "e2e": "node_modules/mocha/bin/mocha test/e2e",
+    "e2e": "./node_modules/mocha/bin/mocha ./test/e2e",
     "lint": "eslint app test *.js",
     "hot-server": "node -r babel-register server.js --color",
     "build-main": "cross-env NODE_ENV=production node -r babel-register ./node_modules/webpack/bin/webpack --config webpack.config.electron.js --progress --profile --colors --color",
