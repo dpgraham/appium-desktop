@@ -16,13 +16,14 @@ build: off
 artifacts:
   - path: 'release\Appium*.exe'
 
-deploy:
-  description: 'Windows release'
-  provider: GitHub
-  force_update: true
-  auth_token:
-    secure: KqmUhAUI3Hhu13HH8pCYpleGyFrTpj+CxB4+yrvUMgPqiYoGamgD9x0DV8lOkGfR
-    artifact: /Appium-Setup-*.exe/
-  on:
-    branch: master
-    appveyor_repo_tag: true
+# TODO: How to deploy AppVeyor without overwriting tag
+#deploy:
+  #description: 'Windows release'
+  #provider: GitHub
+  #force_update: true
+  #auth_token:
+    #secure: KqmUhAUI3Hhu13HH8pCYpleGyFrTpj+CxB4+yrvUMgPqiYoGamgD9x0DV8lOkGfR
+    #artifact: /Appium-Setup-*.exe/
+  #on:
+    #branch: master
+    #appveyor_repo_tag: true
