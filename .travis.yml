@@ -3,7 +3,7 @@ sudo: required
 node: 
 matrix:
   include:
-  - os: osx
+  # - os: osx # Uncomment this when OSX becomes less flaky
   - os: linux
     env: CC=clang CXX=clang++ npm_config_clang=1
     compiler: clang

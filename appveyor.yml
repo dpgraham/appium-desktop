@@ -15,6 +15,7 @@ test_script:
   - node --version
   - npm --version
   - npm run package
+  - npm run e2e
 
 # Don't actually build.
 build: off
