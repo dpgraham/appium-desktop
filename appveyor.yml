@@ -21,14 +21,14 @@ test_script:
 build: off
 
 artifacts:
-  - path: release
+  - path: 'release\Appium*.exe'
 
 deploy:
   description: 'Windows release'
   provider: GitHub
   auth_token:
     secure: KqmUhAUI3Hhu13HH8pCYpleGyFrTpj+CxB4+yrvUMgPqiYoGamgD9x0DV8lOkGfR
-    artifact: release\win-ia32-unpacked
+    artifact: 'release\Appium*.exe'
   on:
     branch: master
     appveyor_repo_tag: true
