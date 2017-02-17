@@ -1,32 +1,25 @@
-# Test against the latest version of this Node.js version
 environment:
   nodejs_version: "6"
 
-# Install scripts. (runs after repo cloning)
 install:
-  # Get the latest stable version of Node.js or io.js
   - ps: Install-Product node $env:nodejs_version
-  # install modules
   - npm install
 
-# Post-install test scripts.
 test_script:
-  # Output useful info for debugging.
   - node --version
   - npm --version
   - npm run package
   - npm run e2e
 
-# Don't do a .NET build
 build: off
 
 artifacts:
   - path: 'release\Appium*.exe'
-    name: 'Appium-Setup-$APPVEYOR_REPO_TAG_NAME.exe'
 
 deploy:
   description: 'Windows release'
   provider: GitHub
+  force_update: true
   auth_token:
     secure: KqmUhAUI3Hhu13HH8pCYpleGyFrTpj+CxB4+yrvUMgPqiYoGamgD9x0DV8lOkGfR
     artifact: /Appium-Setup-*.exe/
