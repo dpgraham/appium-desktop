@@ -19,7 +19,7 @@ test_script:
 # Don't actually build.
 build: off
 
-artifact:
+artifacts:
   - path: release\win-ia32-unpacked
 
 deploy:
