@@ -43,6 +43,7 @@
     "appId": "io.appium.desktop",
     "category": "public.app-category.tools",
     "asar": false,
+    "artifactName": "Appium",
     "directories": {
       "output": "release"
     },
