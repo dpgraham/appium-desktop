@@ -12,7 +12,7 @@ describe('application launch', function () {
   } else if (platform === '') {
     app += '/../../release/mac/Appium.app/Contents/MacOS/Appium';
   } else if (platform === 'win32') {
-    app += '../../release/win-ia32-unpacked';
+    app += '../../release/win-ia32-unpacked/Appium.exe';
   }
 
   beforeEach(function () {
