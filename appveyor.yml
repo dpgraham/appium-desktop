@@ -29,7 +29,7 @@ deploy:
   provider: GitHub
   auth_token:
     secure: KqmUhAUI3Hhu13HH8pCYpleGyFrTpj+CxB4+yrvUMgPqiYoGamgD9x0DV8lOkGfR
-    artifact: 'release\Appium*.exe'
+    artifact: /Appium-Setup-*.exe/
   on:
     branch: master
     appveyor_repo_tag: true
