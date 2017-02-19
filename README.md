@@ -1,4 +1,4 @@
-# Appium Desktop [![Build status](https://travis-ci.org/dpgraham/appium-desktop.svg?branch=master) [![Build status](https://ci.appveyor.com/api/projects/status/gxx736n70959dl84?svg=true)](https://ci.appveyor.com/project/dpgraham/appium-desktop-9xjtw)
+# Appium Desktop ![Build status](https://travis-ci.org/dpgraham/appium-desktop.svg?branch=master) [![Build status](https://ci.appveyor.com/api/projects/status/gxx736n70959dl84?svg=true)](https://ci.appveyor.com/project/dpgraham/appium-desktop-9xjtw)
 
 Appium Desktop is an app for Mac, Windows, and Linux which gives you the power of the [Appium](http://appium.io) automation server in a beautiful and flexible UI. It is a combination of a few Appium-related tools:
 
