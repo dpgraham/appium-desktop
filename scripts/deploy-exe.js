@@ -19,10 +19,9 @@ appiumDesktopRepo.releases(function (err, releases) {
   }
   // Find the release that matches the given tag
   releases = _.keyBy(releases, 'tag_name');
-  console.log('Releases', releases);
   var release = releases[vTag];
   if (!release) {
-    console.error('Could not find asset ' + vTag);
+    console.error('Could not find release at: ' + vTag);
     process.exit(1);
   }
   release = client.release('dpgraham/appium-desktop', release.id);
@@ -32,9 +31,15 @@ appiumDesktopRepo.releases(function (err, releases) {
     uploadHost: 'uploads.github.com',
   }, function (err, response) {
     if (err) {
-      console.log('Could not upload exe', err.body.errors);
-      process.exit(1);
+      if (err.body.errors && err.body.errors[0].code !== 'already_exists') {
+        console.log('Could not upload exe', err.body.errors);
+        process.exit(1);
+      } else {
+        console.warn('Could not uplaod .exe. Already uploaded');
+      }
+    } else {
+      console.log('Uploaded :filename to :tag'.replace(':filename', filename).replace(':tag', tag));
     }
-    console.log(err, response);
+    process.exit(0);
   });
 });
