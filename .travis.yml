@@ -12,9 +12,6 @@ node_js:
 before_install: 
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get install --no-install-recommends
     -y icnsutils graphicsmagick xz-utils; fi
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export RELEASE_FILE_PATH='release/*.AppImage'; fi     
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export RELEASE_FILE_PATH='release/mac/*.app'; fi
-  - echo "Deploying to $RELEASE_FILE_PATH" 
 addons:
   apt:
     packages:
