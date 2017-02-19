@@ -1,11 +1,16 @@
 /* eslint-disable no-console */
-var token = process.env.GITHUB_REPO_TOKEN; // TODO: Change this to the AppVeyor token
-var tag = '1.0.0-beta'; // TODO: Change this to process.env.APPVEYOR_TAG
+var token = process.env.GITHUB_REPO_TOKEN;
+var tag = process.env.APPVEYOR_REPO_TAG_NAME;
 var vTag = 'v' + tag;
 var fs = require('fs');
 var filename = 'Appium Setup :tag.exe'.replace(':tag', tag);
 var github = require('octonode');
 var _ = require('lodash');
+
+if (!tag) {
+  console.log('Not deploying windows exe because it\'s not a tag');
+  process.exit(0);
+}
 
 // Get the client
 var client = github.client(token);
@@ -29,7 +34,7 @@ appiumDesktopRepo.releases(function (err, releases) {
     name: filename,
     contentType: 'application/x-msdownload',
     uploadHost: 'uploads.github.com',
-  }, function (err, response) {
+  }, function (err) {
     if (err) {
       if (err.body.errors && err.body.errors[0].code !== 'already_exists') {
         console.log('Could not upload exe', err.body.errors);
