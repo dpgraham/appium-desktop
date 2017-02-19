@@ -3,7 +3,7 @@ sudo: required
 node: 
 matrix:
   include:
-  # - os: osx # Uncomment this when OSX becomes less flaky
+  - os: osx
   - os: linux
     env: CC=clang CXX=clang++ npm_config_clang=1
     compiler: clang
@@ -27,8 +27,6 @@ cache:
   - node_modules
   - "$HOME/.electron"
   - "$HOME/.cache"
-script:
-- npm run e2e
 install:
 - nvm install 7
 - export DISPLAY=':99.0'

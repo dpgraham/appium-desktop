@@ -9,7 +9,6 @@ test_script:
   - node --version
   - npm --version
   - npm run package-ci
-  #- npm run e2e-win
 
 build: off
 
