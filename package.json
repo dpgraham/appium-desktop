@@ -39,6 +39,7 @@
     "package-linux": "npm run build && build --linux",
     "package-all": "npm run build && build -mwl",
     "package-ci": "npm run build && build --publish onTagOrDraft",
+    "postversion": "git push",
     "deploy-win-exe": "node scripts\\deploy-exe.js"
   },
   "build": {
