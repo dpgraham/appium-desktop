@@ -21,7 +21,7 @@
   "homepage": "https://github.com/chentsulin/electron-react-boilerplate#readme",
   "main": "main.js",
   "scripts": {
-    "test": "cross-env NODE_ENV=test mocha --compilers js:babel-register --recursive --require ./test/setup.js test/**/*.spec.js",
+    "test": "echo 'No unit tests'",
     "test-watch": "npm test -- --watch",
     "e2e": "mocha ./test/e2e",
     "e2e-win": "mocha test\\e2e",
