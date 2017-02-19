@@ -1,7 +1,6 @@
 /* eslint-disable no-console */
 var token = process.env.GITHUB_REPO_TOKEN;
 var tag = process.env.APPVEYOR_REPO_TAG_NAME;
-var vTag = 'v' + tag;
 var fs = require('fs');
 var filename = 'Appium Setup :tag.exe'.replace(':tag', tag);
 var github = require('octonode');
@@ -24,9 +23,9 @@ appiumDesktopRepo.releases(function (err, releases) {
   }
   // Find the release that matches the given tag
   releases = _.keyBy(releases, 'tag_name');
-  var release = releases[vTag];
+  var release = releases[tag];
   if (!release) {
-    console.error('Could not find release at: ' + vTag);
+    console.error('Could not find release at: ' + tag);
     process.exit(0);
   }
 
