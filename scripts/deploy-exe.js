@@ -27,8 +27,10 @@ appiumDesktopRepo.releases(function (err, releases) {
   var release = releases[vTag];
   if (!release) {
     console.error('Could not find release at: ' + vTag);
-    process.exit(1);
+    process.exit(0);
   }
+
+  // Upload the .exe to the release
   release = client.release('dpgraham/appium-desktop', release.id);
   release.uploadAssets(fs.readFileSync('release/:filename'.replace(':filename', filename)), {
     name: filename,
