@@ -10,7 +10,7 @@ test_script:
   - npm --version
   - npm run package
   #- npm run e2e-win
-  - npm run deploy-win-exe
+  #- npm run deploy-win-exe
 
 build: off
 
