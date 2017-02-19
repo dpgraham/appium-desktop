@@ -8,9 +8,8 @@ install:
 test_script:
   - node --version
   - npm --version
-  - npm run package
+  - npm run package-ci
   #- npm run e2e-win
-  #- npm run deploy-win-exe
 
 build: off
 
