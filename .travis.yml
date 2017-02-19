@@ -21,7 +21,7 @@ before_script:
 - npm install
 - npm install -g electron
 - node --version
-- npm run package-ci || true # TODO: Remove this once electron-builder has a new version that includes dpgraham's PR (https://github.com/electron-userland/electron-builder/pull/1274)
+- npm run package-ci
 cache:
   directories:
   - node_modules

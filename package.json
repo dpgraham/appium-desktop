@@ -39,7 +39,6 @@
     "package-linux": "npm run build && build --linux",
     "package-all": "npm run build && build -mwl",
     "package-ci": "npm run build && build --dir && npm run e2e && build --publish onTagOrDraft",
-    "package-win-ci": "npm run build && build --dir && build --publish onTagOrDraft",
     "postversion": "git pull --tags && git push && git push --tags",
     "deploy-win-exe": "node scripts\\deploy-exe.js"
   },
@@ -140,7 +139,7 @@
     "css-loader": "0.x",
     "del": "2.x",
     "devtron": "1.x",
-    "electron-builder": "13.x",
+    "electron-builder": "^13.10.1",
     "electron-devtools-installer": "2.x",
     "electron-prebuilt": "1.x",
     "eslint": "3.x",
