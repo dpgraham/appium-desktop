@@ -38,6 +38,7 @@ function connectAutoUpdater (win) {
     // Autoupdater only works in binaries. Don't do anything 
     try {
       log.info(`Looking for updates. Current version is ${packageJSON.version}`);
+      autoUpdater.checkForUpdates();
     } catch (e) {
       return;
     }
