@@ -7,6 +7,8 @@ import path from 'path';
 import wd from 'wd';
 import Bluebird from 'bluebird';
 import { connectAutoUpdater } from './auto-updater';
+import packageJSON from '../../package.json';
+console.log(packageJSON.version);
 
 const LOG_SEND_INTERVAL_MS = 250;
 const isDev = process.env.NODE_ENV === 'development';
@@ -281,7 +283,6 @@ function initializeIpc (win) {
   connectClientMethodListener(win);
 
   // Look for changes 
-  console.log('Opening auto updater');
   connectAutoUpdater(win);
 }
 
