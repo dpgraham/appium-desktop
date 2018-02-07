@@ -1,5 +1,7 @@
 # Appium Desktop [![Build Status](https://travis-ci.org/appium/appium-desktop.svg?branch=master)](https://travis-ci.org/appium/appium-desktop) [![Build status](https://ci.appveyor.com/api/projects/status/gxx736n70959dl84?svg=true)](https://ci.appveyor.com/project/appium/appium-desktop-9xjtw)
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/dpgraham/appium-desktop.svg)](https://greenkeeper.io/)
+
 Appium Desktop is an app for Mac, Windows, and Linux which gives you the power of the [Appium](http://appium.io) automation server in a beautiful and flexible UI. It is a combination of a few Appium-related tools:
 
 * A graphical interface for the Appium Server. You can set options, start/stop the server, see logs, etc... You also don't need to use Node/NPM to install Appium, as the Node runtime comes bundled with Appium Desktop.
