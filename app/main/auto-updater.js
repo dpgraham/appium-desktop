@@ -1,6 +1,5 @@
-import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
-import { ipcMain, BrowserWindow, Menu } from 'electron';
+import { ipcMain, BrowserWindow, Menu, autoUpdater, app } from 'electron';
 import path from 'path';
 import _ from 'lodash';
 import request from 'request-promise';
@@ -8,6 +7,11 @@ import { version } from '../../package.json';
 import settings from '../settings';
 import B from 'bluebird';
 const isDev = process.env.NODE_ENV === 'development';
+
+// Get server and feed url
+const server = `https://hazel-server-cfuovrxdtd.now.sh/`;
+const feed = `${server}/update/${process.platform}/${app.getVersion()}`;
+autoUpdater.setFeedURL(feed);
 
 // Logs data to 
 autoUpdater.logger = log;

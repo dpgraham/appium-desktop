@@ -90,7 +90,7 @@
     },
     "publish": {
       "provider": "github",
-      "owner": "appium",
+      "owner": "dpgraham",
       "vPrefixedTagName": true
     }
   },
