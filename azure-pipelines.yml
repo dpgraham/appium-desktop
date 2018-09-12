@@ -11,5 +11,6 @@ steps:
   inputs:
     version: '8.x'
   displayName: 'Install NodeJS'
-- script: npm install --only=dev
-- script: npm run package-ci
+- script: |
+    npm install --only=dev
+    npm run package-ci
