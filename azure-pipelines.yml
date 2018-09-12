@@ -14,6 +14,7 @@ steps:
 
 - script: |
     npm install
-    npm run build
+  displayName: 'npm install'
+- script: |
     npm run package-ci
-  displayName: 'npm install and build'
+  displayName: 'npm run package-ci'
