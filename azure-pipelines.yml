@@ -10,5 +10,5 @@ steps:
 - task: NodeTool@0
   inputs:
     version: '8.x'
-
 - script: npm install
+- script: npm run package-ci
