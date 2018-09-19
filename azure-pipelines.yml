@@ -10,8 +10,7 @@ steps:
 - task: NodeTool@0
   inputs:
     version: '9.x'
-  displayName: 'Install NodeJS'
-- script: |
+  script: |
     npm install
     npm run package-ci
   displayName: 'Install dependencies and run packager'
