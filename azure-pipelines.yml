@@ -12,6 +12,7 @@ steps:
     version: '8.x'
   displayName: 'Install NodeJS'
 - script: |
+    npm install -g npm@5
     npm install
     npm run package-ci
   displayName: 'Install dependencies and run packager'
