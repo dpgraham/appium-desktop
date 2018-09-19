@@ -4,7 +4,7 @@
 # https://docs.microsoft.com/vsts/pipelines/languages/javascript
 
 pool:
-  vmImage: 'Ubuntu 16.04'
+  vmImage: 'macOS 10.13'
 
 steps:
 - task: NodeTool@0
@@ -12,8 +12,6 @@ steps:
     version: '8.x'
   displayName: 'Install NodeJS'
 - script: |
-    apt install xvfb libxtst6 libxss1 libgtk2.0-0 -y
-    apt install libnss3 libasound2 libgconf-2-4 -y
     npm install
     npm run package-ci
   displayName: 'Install dependencies and run packager'
