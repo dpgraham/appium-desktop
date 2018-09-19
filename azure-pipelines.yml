@@ -9,8 +9,9 @@ pool:
 steps:
 - task: NodeTool@0
   inputs:
-    version: '9.x'
-  script: |
+    versionSpec: '9.x'
+- script: |
+    npm install -g npm@5
     npm install
     npm run package-ci
   displayName: 'Install dependencies and run packager'
