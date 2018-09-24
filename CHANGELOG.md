@@ -1,3 +1,45 @@
+## [1.7.0](https://github.com/appium/appium-desktop/compare/v1.7.0...v1.6.3) (2018-08-30)
+
+### Changes
+* Feature: Upgrade to Appium 1.9.0
+* Feature: Add relaxed security flag (#607)
+* Feature: Add Bitbar to cloud providers (#603)
+* Feature: Add React Native testID to strategy mappings (#614)
+* Fix: Remove unneeded ipc binding (#612)
+
+
+## [1.6.3](https://github.com/appium/appium-desktop/compare/v1.6.3...v1.6.2) (2018-08-02)
+
+### Changes
+* Feature: Make ANDROID_HOME and JAVA_HOME settable from the UI
+* Feature: Add icon for copying source XML to clipboard
+* Fix: Close session window when main window is closed
+
+## [1.6.2](https://github.com/appium/appium-desktop/compare/v1.6.2...v1.6.1) (2018-06-08)
+
+### Changes
+* Feature: Upgrade to Appium 1.8.1
+* Fix: Use absolute coordinates for 'swipe'
+
+## [1.6.1](https://github.com/appium/appium-desktop/compare/v1.6.1...v1.5.0) (2018-05-08)
+
+### Changes
+* Feature: Upgrade to Appium 1.8.0
+* Feature: Upgrade Electron to 2.0.0
+* Feature: Add internal session keep-alive (#509)
+* Feature: Add BrowserStack as a cloud provider
+
+## [1.5.0](https://github.com/appium/appium-desktop/compare/v1.4.1...v1.5.0) (2018-04-02)
+
+### Changes
+* Feature: Allow unauthorized SSL and set custom proxy (#469)
+
+## [1.4.1](https://github.com/appium/appium-desktop/compare/v1.4.0...v1.4.1) (2018-03-06)
+
+### Changes
+* Fix: Replace electron-builder autoupdater with Zeit Hazel server plus native updater (#435)
+
+
 ## [1.4.0](https://github.com/appium/appium-desktop/compare/v1.3.2...v1.4.0) (2018-02-27)
 
 ### Changes

@@ -53,9 +53,11 @@ export const ServerTypes = {
   sauce: 'sauce',
   testobject: 'testobject',
   headspin: 'headspin',
+  browserstack: 'browserstack',
+  bitbar: 'bitbar',
 };
 
-const JSON_TYPES = ['json_object', 'number', 'boolean'];
+const JSON_TYPES = ['object', 'number', 'boolean'];
 
 export function getCapsObject (caps) {
   return Object.assign({}, ...(caps.map((cap) => {
@@ -208,8 +210,48 @@ export function newSession (caps, attachSessId = null) {
         path = `/v0/${session.server.headspin.apiKey}/wd/hub`;
         https = true;
         break;
+      case ServerTypes.browserstack:
+        host = process.env.BROWSERSTACK_HOST || "hub-cloud.browserstack.com";
+        port = 443;
+        path = "/wd/hub";
+        username = session.server.browserstack.username || process.env.BROWSERSTACK_USERNAME;
+        desiredCapabilities["browserstack.source"] = "appiumdesktop";
+        accessKey = session.server.browserstack.accessKey || process.env.BROWSERSTACK_ACCESS_KEY;
+        if (!username || !accessKey) {
+          notification.error({
+            message: "Error",
+            description: "Browserstack username and access key are required!",
+            duration: 4
+          });
+          return;
+        }
+        https = true;
+        break;
+      case ServerTypes.bitbar:
+        host = process.env.BITBAR_HOST || "appium.bitbar.com";
+        port = 443;
+        path = "/wd/hub";
+        accessKey = session.server.bitbar.apiKey || process.env.BITBAR_API_KEY;
+        if (!accessKey) {
+          notification.error({
+            message: "Error",
+            description: "Bitbar API key required!",
+            duration: 4
+          });
+          return;
+        }
+        desiredCapabilities.testdroid_source = "appiumdesktop";
+        desiredCapabilities.testdroid_apiKey = accessKey;
+        https = true;
+        break;
       default:
         break;
+    }
+
+    let rejectUnauthorized = !session.server.advanced.allowUnauthorized;
+    let proxy;
+    if (session.server.advanced.useProxy && session.server.advanced.proxy) {
+      proxy = session.server.advanced.proxy;
     }
 
     // Start the session
@@ -221,7 +263,9 @@ export function newSession (caps, attachSessId = null) {
       path,
       username,
       accessKey,
-      https
+      https,
+      rejectUnauthorized,
+      proxy,
     });
 
     dispatch({type: SESSION_LOADING});
@@ -229,6 +273,7 @@ export function newSession (caps, attachSessId = null) {
     // If it failed, show an alert saying it failed
     ipcRenderer.once('appium-new-session-failed', (evt, e) => {
       dispatch({type: SESSION_LOADING_DONE});
+      removeNewSessionListeners();
       showError(e, 0);
     });
 
@@ -245,6 +290,7 @@ export function newSession (caps, attachSessId = null) {
         accessKey,
         https,
       })(dispatch);
+      removeNewSessionListeners();
       dispatch(push('/inspector'));
     });
 
@@ -373,10 +419,11 @@ export function changeServerType (serverType) {
 /**
  * Set a server parameter (host, port, etc...)
  */
-export function setServerParam (name, value) {
-  const debounceGetRunningSessions = debounce(getRunningSessions(), 500);
+export function setServerParam (name, value, serverType) {
+  const debounceGetRunningSessions = debounce(getRunningSessions(), 5000);
   return (dispatch, getState) => {
-    dispatch({type: SET_SERVER_PARAM, serverType: getState().session.serverType, name, value});
+    serverType = serverType || getState().session.serverType;
+    dispatch({type: SET_SERVER_PARAM, serverType, name, value});
     debounceGetRunningSessions(dispatch, getState);
   };
 }
@@ -421,8 +468,7 @@ export function getRunningSessions () {
   return (dispatch, getState) => {
     // Get currently running sessions for this server
     const state = getState().session;
-    const server = state.server;
-    const serverType = state.serverType;
+    const {server, serverType} = state;
     const serverInfo = server[serverType];
 
     dispatch({type: GET_SESSIONS_REQUESTED});
@@ -431,9 +477,11 @@ export function getRunningSessions () {
       ipcRenderer.once('appium-client-get-sessions-response', (evt, e) => {
         const res = JSON.parse(e.res);
         dispatch({type: GET_SESSIONS_DONE, sessions: res.value});
+        removeRunningSessionsListeners();
       });
       ipcRenderer.once('appium-client-get-sessions-fail', () => {
         dispatch({type: GET_SESSIONS_DONE});
+        removeRunningSessionsListeners();
       });
     } else {
       dispatch({type: GET_SESSIONS_DONE});
@@ -505,4 +553,14 @@ export function setRawDesiredCaps (rawDesiredCaps) {
     }
     dispatch({type: SET_RAW_DESIRED_CAPS, rawDesiredCaps, isValidCapsJson, invalidCapsJsonReason});
   };
+}
+
+function removeNewSessionListeners () {
+  ipcRenderer.removeAllListeners('appium-new-session-failed');
+  ipcRenderer.removeAllListeners('appium-new-session-ready');
+}
+
+function removeRunningSessionsListeners () {
+  ipcRenderer.removeAllListeners('appium-client-get-sessions-fail');
+  ipcRenderer.removeAllListeners('appium-client-get-sessions-response');
 }

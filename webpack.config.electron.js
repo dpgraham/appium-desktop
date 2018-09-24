@@ -1,5 +1,6 @@
 import webpack from 'webpack';
 import baseConfig from './webpack.config.base';
+import path from 'path';
 
 export default {
   ...baseConfig,
@@ -15,10 +16,16 @@ export default {
   },
 
   plugins: [
+    new webpack.EnvironmentPlugin([
+      'TARGET'
+    ]),
     new webpack.BannerPlugin(
       'require("source-map-support").install();',
       { raw: true, entryOnly: false }
-    )
+    ),
+    new webpack.DefinePlugin({
+      _ENV_: process.env.TARGET ? require(`./env/.env-${process.env.TARGET}`) : require('./env/.env')
+    })
   ],
 
   target: 'electron-main',
@@ -29,7 +36,10 @@ export default {
   },
 
   resolve: {
-    packageAlias: 'main'
+    packageAlias: 'main',
+    alias: {
+      env: path.resolve(__dirname, 'env', process.env.TARGET ? `.env-${process.env.TARGET}` : '.env'),
+    },
   },
 
   externals: [

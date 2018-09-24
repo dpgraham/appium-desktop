@@ -5,7 +5,6 @@ import HighlighterRects from './HighlighterRects';
 import { Spin, Tooltip } from 'antd';
 import B from 'bluebird';
 import styles from './Inspector.css';
-import { parseCoordinates } from './shared';
 
 /**
  * Shows screenshot of running application and divs that highlight the elements' bounding boxes
@@ -30,11 +29,9 @@ export default class Screenshot extends Component {
     const screenshotEl = this.containerEl.querySelector('img');
 
     // now update scale ratio
-    const {x1, x2} = parseCoordinates(this.props.source.children[0].children[0]);
     this.setState({
-      scaleRatio: (x2 - x1) / screenshotEl.offsetWidth
+      scaleRatio: (this.props.windowSize.width / screenshotEl.offsetWidth)
     });
-
   }
 
   async handleScreenshotClick () {
@@ -87,7 +84,7 @@ export default class Screenshot extends Component {
     const {swipeStart, swipeEnd, clearSwipeAction, applyClientMethod} = this.props;
     await applyClientMethod({
       methodName: 'swipe',
-      args: [swipeStart.x, swipeStart.y, swipeEnd.x - swipeStart.x, swipeEnd.y - swipeStart.y],
+      args: [swipeStart.x, swipeStart.y, swipeEnd.x, swipeEnd.y],
     });
     clearSwipeAction();
   }

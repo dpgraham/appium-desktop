@@ -1,5 +1,6 @@
 import { shell } from 'electron';
 import React, { Component } from 'react';
+import _ from 'lodash';
 import NewSessionForm from './NewSessionForm';
 import SavedSessions from './SavedSessions';
 import AttachToSession from './AttachToSession';
@@ -8,17 +9,24 @@ import ServerTabSauce from './ServerTabSauce';
 import ServerTabCustom from './ServerTabCustom';
 import ServerTabTestobject from './ServerTabTestobject';
 import ServerTabHeadspin from './ServerTabHeadspin';
+import ServerTabBrowserstack from './ServerTabBrowserstack';
+import ServerTabBitbar from './ServerTabBitbar';
 import { Tabs, Button, Spin, Icon } from 'antd';
 import { ServerTypes } from '../../actions/Session';
+import AdvancedServerParams from './AdvancedServerParams';
 import SessionStyles from './Session.css';
+import CloudProviders from '../../../shared/cloud-providers';
 
 const {TabPane} = Tabs;
 
 export default class Session extends Component {
 
+  state = {visibleProviders: {}};
+
   componentWillMount () {
     const {setLocalServerParams, getSavedSessions, setSavedServerParams, getRunningSessions} = this.props;
-    (async function () {
+    (async () => {
+      this.checkProvidersVisibility();
       await getSavedSessions();
       await setSavedServerParams();
       await setLocalServerParams();
@@ -26,18 +34,34 @@ export default class Session extends Component {
     })();
   }
 
+  async checkProvidersVisibility () {
+    const visibleProviders = {};
+    for (let [providerName, provider] of _.toPairs(CloudProviders)) {
+      if (await provider.isVisible()) {
+        visibleProviders[providerName] = true;
+      }
+    }
+    this.setState({
+      ...this.state,
+      visibleProviders
+    });
+  }
+
   render () {
     const {newSessionBegan, savedSessions, tabKey, switchTabs,
       changeServerType, serverType, server,
       requestSaveAsModal, newSession, caps, capsUUID, saveSession, isCapsDirty,
       sessionLoading, attachSessId} = this.props;
+    const { visibleProviders } = this.state || {};
 
     const isAttaching = tabKey === 'attach';
 
     const sauceTabHead = <span className={SessionStyles.tabText}><img src="images/sauce_logo.svg" /></span>;
     const testObjectTabHead = <span className={SessionStyles.tabText}><img src="images/testobject_logo.svg" /></span>;
     const headspinTabHead = <span className={SessionStyles.tabText}><img src="images/headspin_logo.svg" /></span>;
-
+    const browserstackTabHead = <span className={SessionStyles.tabText}><img src="images/browserstack_logo.svg" /></span>;
+    const bitbarTabHead = <span className={SessionStyles.tabText}><img src="images/bitbar_logo.svg" /></span>;
+    
     return <Spin spinning={!!sessionLoading}>
       <div className={SessionStyles['session-container']}>
         <div id='serverTypeTabs'>
@@ -48,16 +72,23 @@ export default class Session extends Component {
             <TabPane tab='Custom Server' key={ServerTypes.remote}>
               <ServerTabCustom {...this.props} />
             </TabPane>
-            <TabPane tab={sauceTabHead} key={ServerTypes.sauce}>
+            { visibleProviders.saucelabs && <TabPane tab={sauceTabHead} key={ServerTypes.sauce}>
               <ServerTabSauce {...this.props} />
-            </TabPane>
-            <TabPane tab={testObjectTabHead} key={ServerTypes.testobject}>
+            </TabPane> }
+            { visibleProviders.testobject && <TabPane tab={testObjectTabHead} key={ServerTypes.testobject}>
               <ServerTabTestobject {...this.props} />
-            </TabPane>
-            <TabPane tab={headspinTabHead} key={ServerTypes.headspin}>
+            </TabPane> }
+            { visibleProviders.headspin && <TabPane tab={headspinTabHead} key={ServerTypes.headspin}>
               <ServerTabHeadspin {...this.props} />
-            </TabPane>
+            </TabPane> }
+            { visibleProviders.browserstack && <TabPane tab={browserstackTabHead} key={ServerTypes.browserstack}>
+              <ServerTabBrowserstack {...this.props} />
+            </TabPane> }
+            {visibleProviders.bitbar && <TabPane tab={bitbarTabHead} key={ServerTypes.bitbar}>
+              <ServerTabBitbar {...this.props} />
+            </TabPane>}
           </Tabs>
+          <AdvancedServerParams {...this.props} />
         </div>
 
 

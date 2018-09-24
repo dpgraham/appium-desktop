@@ -1,5 +1,6 @@
 import { app, BrowserWindow, Menu } from 'electron';
 import { initializeIpc } from './appium';
+import { setSavedEnv } from './helpers';
 import menuTemplates from './menus';
 import path from 'path';
 import shellEnv from 'shell-env';
@@ -26,7 +27,7 @@ if (!isDev) {
   // and we need to do the same thing with PATH
   fixPath();
 }
-
+setSavedEnv();
 
 app.on('window-all-closed', () => {
   app.quit();
@@ -87,17 +88,15 @@ app.on('ready', async () => {
   });
 
   if (process.platform === 'darwin') {
-    template = menuTemplates.mac(mainWindow);
+    template = await menuTemplates.mac(mainWindow);
     menu = Menu.buildFromTemplate(template);
     Menu.setApplicationMenu(menu);
   } else {
-    template = menuTemplates.other(mainWindow);
+    template = await menuTemplates.other(mainWindow);
     menu = Menu.buildFromTemplate(template);
     mainWindow.setMenu(menu);
   }
 
   initializeIpc(mainWindow);
-
-
 });
 

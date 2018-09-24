@@ -1,13 +1,61 @@
 import Bluebird from 'bluebird';
-import _ from 'lodash';
 import wd from 'wd';
 
+const isDevelopment = process.env.NODE_ENV === 'development';
+
+const KEEP_ALIVE_PING_INTERVAL = 5 * 1000;
+const NO_NEW_COMMAND_LIMIT = isDevelopment ?  30 * 1000 :  5 * 60 * 1000;
+const WAIT_FOR_USER_KEEP_ALIVE = 30 * 1000;
+
 export default class AppiumMethodHandler {
-  constructor (driver) {
+  constructor (driver, sender) {
     this.driver = driver;
+    this.sender = sender;
     this.elementCache = {};
     this.elVariableCounter = 1;
     this.elArrayVariableCounter = 1;
+    this._lastActiveMoment = +(new Date());
+  }
+
+  /**
+   * Ping server every 30 seconds to prevent `newCommandTimeout` from killing session
+   */
+  runKeepAliveLoop () {
+    this.keepAlive = setInterval(() => {
+      this.driver.sessionCapabilities(); // Pings the Appium server to keep it alive
+      const now = +(new Date());
+
+      // If the new command limit has been surpassed, prompt user if they want to keep session going
+      // Give them 30 seconds to respond
+      if (now - this._lastActiveMoment > NO_NEW_COMMAND_LIMIT) {
+        this.sender.send('appium-prompt-keep-alive');
+
+        // After the time limit kill the session (this timeout will be killed if they keep it alive)
+        this.waitForUserTimeout = setTimeout(() => {
+          this.close('Session closed due to inactivity');
+        }, WAIT_FOR_USER_KEEP_ALIVE);
+      }
+    }, KEEP_ALIVE_PING_INTERVAL);
+  }
+
+  /**
+   * Get rid of the intervals to keep the session alive
+   */
+  killKeepAliveLoop () {
+    clearInterval(this.keepAlive);
+    if (this.waitForUserTimeout) {
+      clearTimeout(this.waitForUserTimeout);
+    }
+  }
+
+  /**
+   * Reset the new command clock and kill the wait for user timeout
+   */
+  keepSessionAlive () {
+    this._lastActiveMoment = +(new Date());
+    if (this.waitForUserTimeout) {
+      clearTimeout(this.waitForUserTimeout);
+    }
   }
 
   async fetchElement (strategy, selector) {
@@ -59,6 +107,7 @@ export default class AppiumMethodHandler {
   }
 
   async _execute ({elementId, methodName, args, skipScreenshotAndSource}) {
+    this._lastActiveMoment = +(new Date());
     let cachedEl;
     let res = {};
 
@@ -76,7 +125,7 @@ export default class AppiumMethodHandler {
           .tap({x: args[0], y: args[1]})
           .perform();
       } else if (methodName === 'swipe') {
-        const [startX, startY, endX, endY]  = args;
+        const [startX, startY, endX, endY] = args;
         res = await (new wd.TouchAction(this.driver))
           .press({x: startX, y: startY})
           .moveTo({x: endX, y: endY})
@@ -111,7 +160,7 @@ export default class AppiumMethodHandler {
   }
   
   async _getSourceAndScreenshot () {
-    let source, sourceError, screenshot, screenshotError;
+    let source, sourceError, screenshot, screenshotError, windowSize, windowSizeError;
     try {
       source = await this.driver.source();
     } catch (e) {
@@ -129,19 +178,39 @@ export default class AppiumMethodHandler {
       }
       screenshotError = e;
     }
+    
+    try {
+      windowSize = await this.driver.getWindowSize();
+      
+    } catch (e) {
+      if (e.status === 6) {
+        throw e;
+      }
+      windowSizeError = e;
+    }
 
-    return {source, sourceError, screenshot, screenshotError};
+    return {source, sourceError, screenshot, screenshotError, windowSize, windowSizeError};
   }
 
   restart () {
     // Clear the variable names and start over (el1, el2, els1, els2, etc...)
-    for (let elCache of _.toPairs(this.elementCache)) {
+    for (const elCache of Object.values(this.elementCache)) {
       delete elCache.variableName;
     }
 
     // Restart the variable counter
     this.elVariableCounter = 1;
     this.elArrayVariableCounter = 1;   
+  }
+
+  async close (reason, killedByUser=false) {
+    this.killKeepAliveLoop();
+    this.sender.send('appium-session-done', {reason, killedByUser});
+    if (!this.driver._isAttachedSession) {
+      try {
+        await this.driver.quit();
+      } catch (ign) { }
+    }
   }
 
 }

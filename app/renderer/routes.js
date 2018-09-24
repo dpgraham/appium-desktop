@@ -5,7 +5,7 @@ import StartServerPage from './containers/StartServerPage';
 import ServerMonitorPage from './containers/ServerMonitorPage';
 import SessionPage from './containers/SessionPage';
 import InspectorPage from './containers/InspectorPage';
-import UpdaterPage from './containers/UpdaterPage';
+import ConfigPage from './containers/ConfigPage';
 
 export default (
   <Route path="/" component={App}>
@@ -13,6 +13,6 @@ export default (
     <Route path="monitor" component={ServerMonitorPage} />
     <Route path="session" component={SessionPage} />
     <Route path="inspector" component={InspectorPage} />
-    <Route path="updater" component={UpdaterPage} />
+    <Route path="config" component={ConfigPage} />
   </Route>
 );

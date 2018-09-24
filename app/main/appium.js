@@ -1,24 +1,25 @@
 /* eslint-disable no-console */
 
-import { ipcMain, BrowserWindow, Menu, app } from 'electron';
+import { ipcMain, app } from 'electron';
 import { main as appiumServer } from 'appium';
 import { getDefaultArgs, getParser } from 'appium/build/lib/parser';
 import path from 'path';
 import wd from 'wd';
 import { fs, tempDir } from 'appium-support';
+import _ from 'lodash';
 import settings from '../settings';
-import autoUpdaterController from './auto-updater';
 import AppiumMethodHandler from './appium-method-handler';
 import request from 'request-promise';
+import { checkNewUpdates } from './auto-updater';
+import { openBrowserWindow, setSavedEnv } from './helpers';
 
 const LOG_SEND_INTERVAL_MS = 250;
-const isDev = process.env.NODE_ENV === 'development';
+
+const defaultEnvironmentVariables = _.clone(process.env);
 
 var server = null;
 var logWatcher = null;
 var batchedLogs = [];
-
-let sessionDrivers = {};
 
 let appiumHandlers = {};
 let logFile;
@@ -37,21 +38,13 @@ async function deleteLogfile () {
 /**
  * Kill session associated with session browser window
  */
-async function killSession (sessionWinID) {
-  let driver = sessionDrivers[sessionWinID];
-  if (driver) {
-    let sessionID;
-    try {
-      await driver.getSessionId();
-      if (!driver._isAttachedSession) {
-        await driver.quit();
-      }
-    } catch (e) {
-      console.log(`Couldn't close session: ${sessionID || 'unknown session ID'}`);
-    }
-    delete sessionDrivers[sessionWinID];
-    delete appiumHandlers[sessionWinID];
+async function killSession (sessionWinID, killedByUser=false) {
+  let handler = appiumHandlers[sessionWinID];
+  if (handler) {
+    await handler.close('', killedByUser);  
   }
+  
+  delete appiumHandlers[sessionWinID];
 }
 
 function connectStartServer (win) {
@@ -127,7 +120,7 @@ function connectGetDefaultArgs () {
     evt.returnValue = getDefaultArgs();
   });
 
-  ipcMain.on('get-args-metadata', (evt) => {
+  ipcMain.on('get-args-metadata', (/*evt*/) => {
     // If argv isn't defined, set it now. If argv[1] isn't defined, set it to empty string.
     // If process.argv[1] is undefined, calling getParser() will break because argparse expects it to be a string
     if (!process.argv) {
@@ -137,10 +130,14 @@ function connectGetDefaultArgs () {
     if (!process.argv[1]) {
       process.argv[1] = '';
     }
+    // Temporarily remove this feature until 'getParser' issue (https://github.com/appium/appium/issues/11320) has been fixed 
+    /*const backupPathResolve = path.resolve;
+    path.resolve = () => "node_modules/appium/package.json";
     let defArgs = Object.keys(getDefaultArgs());
     evt.returnValue = getParser().rawArgs
                         .filter((a) => defArgs.indexOf(a[1].dest) !== -1)
                         .map((a) => a[1]);
+    path.resolve = backupPathResolve;*/
   });
 }
 
@@ -153,119 +150,86 @@ function connectCreateNewSessionWindow (win) {
   });
 }
 
-export function createNewSessionWindow (win) {
-  // Create and open the Browser Window
-  let sessionWin = new BrowserWindow({
-    width: 920,
-    minWidth: 920,
-    height: 570,
-    minHeight: 570,
-    title: "Start Session",
-    backgroundColor: "#f2f2f2",
-    frame: "customButtonsOnHover",
-    titleBarStyle: 'hidden',
-    webPreferences: {
-      devTools: true
-    }
+function connectClearLogFile () {
+  ipcMain.on('appium-clear-logfile', async (event, {logfilePath}) => {
+    await fs.writeFile(logfilePath, '');
   });
-  // note that __dirname changes based on whether we're in dev or prod;
-  // in dev it's the actual dirname of the file, in prod it's the root
-  // of the project (where main.js is built), so switch accordingly
-  let sessionHTMLPath = path.resolve(__dirname,  isDev ? '..' : 'app', 'renderer', 'index.html');
-  // on Windows we'll get backslashes, but we don't want these for a browser URL, so replace
-  sessionHTMLPath = sessionHTMLPath.replace("\\", "/");
-  sessionHTMLPath += '#/session';
-  sessionWin.loadURL(`file://${sessionHTMLPath}`);
-  sessionWin.show();
+}
+
+export function createNewSessionWindow (win) {
+  let sessionWin = openBrowserWindow('session', {
+    title: "Start Session",
+    titleBarStyle: 'hidden',
+  });
 
   // When you close the session window, kill its associated Appium session (if there is one)
   let sessionID = sessionWin.webContents.id;
   sessionWin.on('closed', async () => {
-    const driver = sessionDrivers[sessionID];
-    if (driver) {
-      if (!driver._isAttachedSession) {
-        await driver.quit();
-      }
-      delete sessionDrivers[sessionID];
-    }
+    await killSession(sessionID);
     sessionWin = null;
   });
 
   // When the main window is closed, close the session window too
   win.once('closed', () => {
-    sessionWin = null;
-  });
-
-  // If it's dev, go ahead and open up the dev tools automatically
-  if (isDev) {
-    sessionWin.openDevTools();
-  }
-  sessionWin.webContents.on('context-menu', (e, props) => {
-    const {x, y} = props;
-
-    Menu.buildFromTemplate([{
-      label: 'Inspect element',
-      click () {
-        sessionWin.inspectElement(x, y);
-      }
-    }]).popup(sessionWin);
+    sessionWin.close();
   });
 }
 
 function connectCreateNewSession () {
   ipcMain.on('appium-create-new-session', async (event, args) => {
     const {desiredCapabilities, host, port, path, username, accessKey, https,
-      attachSessId} = args;
+      attachSessId, rejectUnauthorized, proxy} = args;
 
-    // If there is an already active session, kill it. Limit one session per window.
-    if (sessionDrivers[event.sender.id]) {
-      await killSession(event.sender);
-    }
+    try {
+      // If there is an already active session, kill it. Limit one session per window.
+      if (appiumHandlers[event.sender.id]) {
+        await killSession(event.sender);
+      }
 
-    // Create the driver and cache it by the sender ID
-    let driver = sessionDrivers[event.sender.id] = wd.promiseChainRemote({
-      hostname: host,
-      port,
-      path,
-      username,
-      accessKey,
-      https,
-    });
-    appiumHandlers[event.sender.id] = new AppiumMethodHandler(driver);
+      // Create the driver and cache it by the sender ID
+      let driver = wd.promiseChainRemote({
+        hostname: host,
+        port,
+        path,
+        username,
+        accessKey,
+        https,
+      });
+      driver.configureHttp({rejectUnauthorized, proxy});
+      const handler = appiumHandlers[event.sender.id] = new AppiumMethodHandler(driver, event.sender);
 
-    // If we're just attaching to an existing session, do that and
-    // short-circuit the rest of the logic
-    if (attachSessId) {
-      driver._isAttachedSession = true;
-      try {
+      // If we're just attaching to an existing session, do that and
+      // short-circuit the rest of the logic
+      if (attachSessId) {
+        driver._isAttachedSession = true;
         await driver.attach(attachSessId);
         // get the session capabilities to prove things are working
         await driver.sessionCapabilities();
         event.sender.send('appium-new-session-ready');
-      } catch (e) {
-        // If the session failed to attach, delete it from the cache
-        await killSession(event.sender);
-        event.sender.send('appium-new-session-failed', e);
+        return;
       }
-      return;
-    }
 
-    // If a newCommandTimeout wasn't provided, set it to 0 so that sessions don't close on users
-    if (!desiredCapabilities.newCommandTimeout) {
-      desiredCapabilities.newCommandTimeout = 0;
-    }
+      // If a newCommandTimeout wasn't provided, set it to 0 so that sessions don't close on users
+      if (!desiredCapabilities.newCommandTimeout) {
+        desiredCapabilities.newCommandTimeout = 0;
+      }
 
-    // If someone didn't specify connectHardwareKeyboard, set it to true by
-    // default
-    if (typeof desiredCapabilities.connectHardwareKeyboard === "undefined") {
-      desiredCapabilities.connectHardwareKeyboard = true;
-    }
+      // If someone didn't specify connectHardwareKeyboard, set it to true by
+      // default
+      if (typeof desiredCapabilities.connectHardwareKeyboard === "undefined") {
+        desiredCapabilities.connectHardwareKeyboard = true;
+      }
 
-    // Try initializing it. If it fails, kill it and send error message to sender
-    try {
+      // Try initializing it. If it fails, kill it and send error message to sender
       let p = driver.init(desiredCapabilities);
       event.sender.send('appium-new-session-successful');
       await p;
+
+      if (host !== '127.0.0.1' && host !== 'localhost') {
+        handler.runKeepAliveLoop();
+      }
+
+
       // we don't really support the web portion of apps for a number of
       // reasons, so pre-emptively ensure we're in native mode before doing the
       // rest of the inspector startup. Since some platforms might not implement
@@ -285,6 +249,12 @@ function connectCreateNewSession () {
 function connectRestartRecorder () {
   ipcMain.on('appium-restart-recorder', (evt) => {
     appiumHandlers[evt.sender.id].restart();
+  });
+}
+
+function connectKeepAlive () {
+  ipcMain.on('appium-keep-session-alive', (evt) => {
+    appiumHandlers[evt.sender.id].keepSessionAlive();
   });
 }
 
@@ -310,12 +280,13 @@ function connectClientMethodListener () {
 
     try {
       if (methodName === 'quit') {
-        await killSession(renderer.id);
+        await killSession(renderer.id, true);
         // when we've quit the session, there's no source/screenshot to send
         // back
         renderer.send('appium-client-command-response', {
           source: null,
           screenshot: null,
+          windowSize: null,
           uuid,
           result: null
         });
@@ -376,6 +347,41 @@ function connectMoveToApplicationsFolder () {
   });
 }
 
+export function createNewConfigWindow (win) {
+  openBrowserWindow('config', {
+    title: "Config",
+    parent: win,
+    width: 1080 / 2,
+    height: 1080 / 4,
+  });
+}
+
+function connectOpenConfig (win) {
+  ipcMain.on('appium-open-config', () => {
+    createNewConfigWindow(win);
+  });
+}
+
+function connectGetEnv () {
+  ipcMain.on('appium-get-env', async (event) => {
+    event.sender.send('appium-env', {
+      defaultEnvironmentVariables,
+      savedEnvironmentVariables: await settings.get('ENV', {}),
+    });
+  });
+}
+
+function connectSaveEnv () {
+  ipcMain.on('appium-save-env', async (event, environmentVariables) => {
+    // Pluck unset values
+    const env = _.pickBy(environmentVariables, _.identity);
+
+    await settings.set('ENV', env);
+    await setSavedEnv();
+    event.sender.send('appium-save-env-done');
+  });
+}
+
 function initializeIpc (win) {
   // listen for 'start-server' from the renderer
   connectStartServer(win);
@@ -389,9 +395,13 @@ function initializeIpc (win) {
   connectGetSessionsListener();
   connectRestartRecorder();
   connectMoveToApplicationsFolder();
+  connectKeepAlive();
+  connectClearLogFile();
+  connectOpenConfig(win);
+  connectGetEnv();
+  connectSaveEnv();
 
-  autoUpdaterController.setMainWindow(win);
-  autoUpdaterController.checkForUpdates();
+  setTimeout(checkNewUpdates, 10000);
 }
 
 export { initializeIpc };

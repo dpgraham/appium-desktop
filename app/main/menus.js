@@ -1,8 +1,25 @@
-import { app, shell } from 'electron';
-import { createNewSessionWindow } from './appium';
-import autoUpdater from './auto-updater';
+import { app, shell, dialog } from 'electron';
+import _ from 'lodash';
+import { createNewSessionWindow, createNewConfigWindow} from './appium';
+import { checkNewUpdates } from './auto-updater';
+import CloudProviders from '../shared/cloud-providers';
 
 let menuTemplates = {mac: {}, other: {}};
+
+async function getCloudProvidersViewMenu () {
+  const providersMenu = [];
+  for (let provider of _.values(CloudProviders)) {
+    providersMenu.push({
+      label: provider.label,
+      type: 'checkbox',
+      checked: await provider.isVisible(),
+      click (menuItem) {
+        provider.setVisible(menuItem.checked);
+      },
+    });
+  }
+  return providersMenu;
+}
 
 function macMenuAppium (mainWindow) {
   return {
@@ -13,8 +30,7 @@ function macMenuAppium (mainWindow) {
     }, {
       label: 'Check for updates',
       click () {
-        autoUpdater.openUpdaterWindow(mainWindow);
-        autoUpdater.checkForUpdates();
+        checkNewUpdates(true);
       }
     }, {
       type: 'separator'
@@ -23,6 +39,11 @@ function macMenuAppium (mainWindow) {
       accelerator: 'Command+N',
       click () {
         createNewSessionWindow(mainWindow);
+      }
+    }, {
+      label: 'Configurations',
+      click () {
+        createNewConfigWindow(mainWindow);
       }
     }, {
       type: 'separator'
@@ -80,34 +101,37 @@ const macMenuEdit = {
   }]
 };
 
-function macMenuView (mainWindow) {
+async function macMenuView (mainWindow) {
+  const submenu = (process.env.NODE_ENV === 'development') ? [{
+    label: 'Reload',
+    accelerator: 'Command+R',
+    click () {
+      mainWindow.webContents.reload();
+    }
+  }, {
+    label: 'Toggle Developer Tools',
+    accelerator: 'Alt+Command+I',
+    click () {
+      mainWindow.toggleDevTools();
+    }
+  }] : [];
+
+  submenu.push({
+    label: 'Toggle Full Screen',
+    accelerator: 'Ctrl+Command+F',
+    click () {
+      mainWindow.setFullScreen(!mainWindow.isFullScreen());
+    }
+  });
+
+  submenu.push({
+    label: 'Cloud Providers',
+    submenu: await getCloudProvidersViewMenu(),
+  });
+
   return {
     label: 'View',
-    submenu: (process.env.NODE_ENV === 'development') ? [{
-      label: 'Reload',
-      accelerator: 'Command+R',
-      click () {
-        mainWindow.webContents.reload();
-      }
-    }, {
-      label: 'Toggle Full Screen',
-      accelerator: 'Ctrl+Command+F',
-      click () {
-        mainWindow.setFullScreen(!mainWindow.isFullScreen());
-      }
-    }, {
-      label: 'Toggle Developer Tools',
-      accelerator: 'Alt+Command+I',
-      click () {
-        mainWindow.toggleDevTools();
-      }
-    }] : [{
-      label: 'Toggle Full Screen',
-      accelerator: 'Ctrl+Command+F',
-      click () {
-        mainWindow.setFullScreen(!mainWindow.isFullScreen());
-      }
-    }]
+    submenu,
   };
 }
 
@@ -149,10 +173,10 @@ const macMenuHelp = {
   }]
 };
 
-menuTemplates.mac = (mainWindow) => [
+menuTemplates.mac = async (mainWindow) => [
   macMenuAppium(mainWindow),
   macMenuEdit,
-  macMenuView(mainWindow),
+  await macMenuView(mainWindow),
   macMenuWindow,
   macMenuHelp
 ];
@@ -164,8 +188,10 @@ function otherMenuFile (mainWindow) {
   }, {
     label: '&About Appium',
     click () {
-      autoUpdater.openUpdaterWindow(mainWindow);
-      autoUpdater.checkForUpdates();
+      dialog.showMessageBox({
+        title: 'Appium Desktop',
+        message: `Version ${app.getVersion()}`,
+      });
     }
   }, {
     type: 'separator'
@@ -188,8 +214,7 @@ function otherMenuFile (mainWindow) {
     fileSubmenu.splice(1, 0, {
       label: '&Check for updates',
       click () {
-        autoUpdater.openUpdaterWindow(mainWindow);
-        autoUpdater.checkForUpdates();
+        checkNewUpdates(true);
       }
     });
   }
@@ -200,34 +225,42 @@ function otherMenuFile (mainWindow) {
   };
 }
 
-function otherMenuView (mainWindow) {
-  return {
-    label: '&View',
-    submenu: (process.env.NODE_ENV === 'development') ? [{
+async function otherMenuView (mainWindow) {
+
+  const submenu = [];
+  submenu.push([{
+    label: 'Toggle &Full Screen',
+    accelerator: 'F11',
+    click () {
+      mainWindow.setFullScreen(!mainWindow.isFullScreen());
+    }
+  }]);
+
+  submenu.push({
+    label: 'Cloud Providers',
+    submenu: await getCloudProvidersViewMenu(),
+  });
+
+  if (process.env.NODE_ENV === 'development') {
+    submenu.push({
       label: '&Reload',
       accelerator: 'Ctrl+R',
       click () {
         mainWindow.webContents.reload();
       }
-    }, {
-      label: 'Toggle &Full Screen',
-      accelerator: 'F11',
-      click () {
-        mainWindow.setFullScreen(!mainWindow.isFullScreen());
-      }
-    }, {
+    });
+    submenu.push({
       label: 'Toggle &Developer Tools',
       accelerator: 'Alt+Ctrl+I',
       click () {
         mainWindow.toggleDevTools();
       }
-    }] : [{
-      label: 'Toggle &Full Screen',
-      accelerator: 'F11',
-      click () {
-        mainWindow.setFullScreen(!mainWindow.isFullScreen());
-      }
-    }]
+    });
+  }
+
+  return {
+    label: '&View',
+    submenu,
   };
 }
 
@@ -251,9 +284,9 @@ const otherMenuHelp = {
   }]
 };
 
-menuTemplates.other = (mainWindow) => [
+menuTemplates.other = async (mainWindow) => [
   otherMenuFile(mainWindow),
-  otherMenuView(mainWindow),
+  await otherMenuView(mainWindow),
   otherMenuHelp
 ];
 

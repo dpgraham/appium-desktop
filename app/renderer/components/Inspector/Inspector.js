@@ -1,12 +1,13 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
-import { Card, Icon, Button, Spin, Tooltip } from 'antd';
+import { Card, Icon, Button, Spin, Tooltip, Modal } from 'antd';
 import Screenshot from './Screenshot';
 import SelectedElement from './SelectedElement';
 import Source from './Source';
 import SourceScrollButtons from './SourceScrollButtons';
 import InspectorStyles from './Inspector.css';
 import RecordedActions from './RecordedActions';
+import { clipboard } from 'electron';
 
 const ButtonGroup = Button.Group;
 
@@ -21,7 +22,7 @@ export default class Inspector extends Component {
     this.state = {};
   }
 
-  componentWillMount () {
+  componentDidMount () {
     const curHeight = window.innerHeight;
     const curWidth = window.innerWidth;
     const needsResize = (curHeight < MIN_HEIGHT) || (curWidth < MIN_WIDTH);
@@ -46,7 +47,8 @@ export default class Inspector extends Component {
   render () {
     const {screenshot, screenshotError, selectedElement = {},
       applyClientMethod, quitSession, isRecording, showRecord, startRecording,
-      pauseRecording, showLocatorTestModal, screenshotInteractionMode} = this.props;
+      pauseRecording, showLocatorTestModal, screenshotInteractionMode, 
+      showKeepAlivePrompt, keepSessionAlive, sourceXML} = this.props;
     const {path} = selectedElement;
 
     let main = <div className={InspectorStyles['inspector-main']}>
@@ -68,7 +70,7 @@ export default class Inspector extends Component {
          className={InspectorStyles['source-tree-card']}>
           <Source {...this.props} />
         </Card>
-        {this.container && <SourceScrollButtons container={this.container} />}
+        {this.container && <SourceScrollButtons {...this.props} container={this.container} />}
       </div>
       <div id='selectedElementContainer' className={`${InspectorStyles['source-tree-container']} ${InspectorStyles['element-detail-container']}`}>
         <Card
@@ -122,6 +124,9 @@ export default class Inspector extends Component {
         <Tooltip title="Search for element">
            <Button id='searchForElement' icon="search" onClick={showLocatorTestModal}/>
         </Tooltip>
+        <Tooltip title="Copy XML Source to Clipboard">
+           <Button id='btnSourceXML' icon="copy" onClick={() => clipboard.writeText(sourceXML)}/>
+        </Tooltip>
         <Tooltip title="Quit Session & Close Inspector">
           <Button id='btnClose' icon='close' onClick={() => quitSession()}/>
         </Tooltip>
@@ -131,6 +136,16 @@ export default class Inspector extends Component {
     return <div className={InspectorStyles['inspector-container']}>
       {controls}
       {main}
+      <Modal 
+        title="Session Inactive"
+        visible={showKeepAlivePrompt}
+        onOk={() => keepSessionAlive()}
+        onCancel={() => quitSession()}
+        okText="Keep Session Running"
+        cancelText="Quit Session"
+      >
+        <p>Your session is about to expire</p>
+      </Modal>
     </div>;
   }
 }

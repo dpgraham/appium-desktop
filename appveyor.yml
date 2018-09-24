@@ -1,15 +1,17 @@
 environment:
-  nodejs_version: "6"
+  nodejs_version: "9"
   GH_TOKEN:
     secure: fyB6CRcrHbroxaBvzN6aPHUEhHGc3ljbbTPtEqruaDVe/iO8/dZn4LOVNS/fAlSX
 install:
   - ps: Install-Product node $env:nodejs_version
-  - npm install
+  - npm install -g npm
+  - npm ci
 
 test_script:
   - node --version
   - npm --version
   - npm run package-ci
+  - npm run package-nsis
 
 build: off
 

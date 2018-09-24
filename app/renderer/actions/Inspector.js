@@ -5,7 +5,7 @@ import _ from 'lodash';
 import B from 'bluebird';
 import { getLocators } from '../components/Inspector/shared';
 import { showError } from './Session';
-import { callClientMethod } from './shared';
+import { bindClient, unbindClient, callClientMethod } from './shared';
 import { getOptimalXPath } from '../util';
 import frameworks from '../lib/client-frameworks';
 import settings from '../../settings';
@@ -54,6 +54,8 @@ export const CLEAR_SEARCHED_FOR_ELEMENT_BOUNDS = 'CLEAR_SEARCHED_FOR_ELEMENT_BOU
 export const SET_SWIPE_START = 'SET_SWIPE_START';
 export const SET_SWIPE_END = 'SET_SWIPE_END';
 export const CLEAR_SWIPE_ACTION = 'CLEAR_SWIPE_ACTION';
+export const PROMPT_KEEP_ALIVE = 'PROMPT_KEEP_ALIVE';
+export const HIDE_PROMPT_KEEP_ALIVE = 'HIDE_PROMPT_KEEP_ALIVE';
 
 
 // Attributes on nodes that we know are unique to the node
@@ -97,19 +99,31 @@ function xmlToJSON (source) {
 
 export function bindAppium () {
   return (dispatch) => {
-    ipcRenderer.on('appium-session-done', () => {
-      notification.error({
-        message: "Error",
-        description: "Session has been terminated",
-        duration: 0
-      });
-      ipcRenderer.removeAllListeners('appium-client-command-response');
-      ipcRenderer.removeAllListeners('appium-client-command-response-error');
-      dispatch({type: SESSION_DONE});
+    // Listen for session response messages from 'main'
+    bindClient();
+
+    // If user is inactive ask if they wish to keep session alive
+    ipcRenderer.on('appium-prompt-keep-alive', () => {
+      promptKeepAlive()(dispatch);
+    });
+
+    // When session is done, unbind them all
+    ipcRenderer.on('appium-session-done', (evt, {reason, killedByUser}) => {
+      ipcRenderer.removeAllListeners('appium-session-done');
+      ipcRenderer.removeAllListeners('appium-prompt-keep-alive');
+      unbindClient();
+      dispatch({type: QUIT_SESSION_DONE});
+      dispatch(push('/session'));
+      if (!killedByUser) {
+        notification.error({
+          message: "Error",
+          description: reason || "Session has been terminated",
+          duration: 0
+        });
+      }
     });
   };
 }
-
 
 // A debounced function that calls findElement and gets info about the element
 const findElement = _.debounce(async function (strategyMap, dispatch, getState, path) {
@@ -125,9 +139,9 @@ const findElement = _.debounce(async function (strategyMap, dispatch, getState, 
     if (elementId && getState().inspector.selectedElementPath === path) {
       return dispatch({type: SET_SELECTED_ELEMENT_ID, elementId, variableName, variableType});
     }
-
-    return dispatch({type: SET_INTERACTIONS_NOT_AVAILABLE});
   }
+
+  return dispatch({type: SET_INTERACTIONS_NOT_AVAILABLE});
 }, 1000);
 
 export function selectElement (path) {
@@ -188,7 +202,7 @@ export function applyClientMethod (params) {
                       getState().inspector.isRecording;
     try {
       dispatch({type: METHOD_CALL_REQUESTED});
-      let {source, screenshot, result, sourceError, screenshotError, 
+      let {source, screenshot, windowSize, result, sourceError, screenshotError, windowSizeError,
         variableName, variableIndex, strategy, selector} = await callClientMethod(params);
       if (isRecording) {
         // Add 'findAndAssign' line of code. Don't do it for arrays though. Arrays already have 'find' expression
@@ -206,9 +220,11 @@ export function applyClientMethod (params) {
         type: SET_SOURCE_AND_SCREENSHOT, 
         source: source && xmlToJSON(source), 
         sourceXML: source,
-        screenshot, 
+        screenshot,
+        windowSize,
         sourceError, 
         screenshotError,
+        windowSizeError,
       });
       return result;
     } catch (error) {
@@ -257,10 +273,7 @@ export function setExpandedPaths (paths) {
  */
 export function quitSession () {
   return async (dispatch) => {
-    dispatch({type: QUIT_SESSION_REQUESTED});
     await applyClientMethod({methodName: 'quit'})(dispatch);
-    dispatch({type: QUIT_SESSION_DONE});
-    dispatch(push('/session'));
   };
 }
 
@@ -421,5 +434,18 @@ export function setSwipeEnd (swipeEndX, swipeEndY) {
 export function clearSwipeAction () {
   return (dispatch) => {
     dispatch({type: CLEAR_SWIPE_ACTION});
+  };
+}
+
+export function promptKeepAlive () {
+  return (dispatch) => {
+    dispatch({type: PROMPT_KEEP_ALIVE});
+  };
+}
+
+export function keepSessionAlive () {
+  return (dispatch) => {
+    dispatch({type: HIDE_PROMPT_KEEP_ALIVE});
+    ipcRenderer.send('appium-keep-session-alive');
   };
 }

@@ -44,6 +44,11 @@ function stopListening () {
   ipcRenderer.removeAllListeners('appium-stop-error');
 }
 
+function removeStopListeners () {
+  ipcRenderer.removeAllListeners('appium-stop-error');
+  ipcRenderer.removeAllListeners('appium-stop-ok');
+}
+
 export function stopServer () {
   return (dispatch) => {
     dispatch(stopServerReq());
@@ -51,6 +56,7 @@ export function stopServer () {
     ipcRenderer.once('appium-stop-error', (event, message) => {
       alert(`Stop server failed: ${message}`);
       dispatch(stopServerFailed(message));
+      removeStopListeners();
     });
 
     stopListening();
@@ -63,6 +69,7 @@ export function stopServer () {
       setTimeout(() => {
         dispatch(stopServerOK());
       }, 0);
+      removeStopListeners();
     });
 
     ipcRenderer.send('stop-server');
@@ -77,10 +84,10 @@ export function closeMonitor () {
 }
 
 export function clearLogs () {
-  return async (dispatch, getState) => {
+  return (dispatch, getState) => {
     const logfilePath = getState().startServer.logfilePath;
     if (logfilePath) {
-      await fs.writeFile(logfilePath, '');
+      ipcRenderer.send('appium-clear-logfile', {logfilePath});
     }
     dispatch({type: LOGS_CLEARED});
   };
