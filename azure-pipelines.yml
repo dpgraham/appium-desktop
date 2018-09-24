@@ -9,7 +9,7 @@ pool:
 steps:
 - task: NodeTool@0
   inputs:
-    versionSpec: '9.x'
+    versionSpec: '8.x'
 - script: |
     npm install
     npm run package-ci
